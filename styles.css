@@ -1,0 +1,95 @@
+/* Сброс и база */
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; padding: 0; }
+body {
+  background: #000;
+  color: #fff;
+  font: 400 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* безопасные vh и настройки анимаций */
+:root {
+  --vh: 1vh;
+  --safe-vh: var(--vh);
+  /* Настройки эффектов (подкручиваются при необходимости) */
+  --scrim-max: 0.45;             /* максимальное затемнение фото */
+  --image-shift-factor: 0.085;   /* доля высоты окна для параллакса */
+  --image-base-scale: 1.28;      /* базовый зум, чтобы не было пустот */
+  --image-scale-range: 0.06;     /* дополнительный зум при прокрутке */
+  --copy-extra-factor: 0.46;     /* доля высоты окна для траектории текста */
+}
+@supports (height: 100svh) { :root { --safe-vh: 1svh; } }
+@supports (height: 100dvh) { :root { --safe-vh: 1dvh; } }
+
+.stack { width: 100%; }
+
+/* Каждая панель даёт длину прокрутки */
+.panel {
+  height: calc(200 * var(--safe-vh)); /* ~200vh для пространства скролла */
+  margin: 0;
+  position: relative;
+  background: #000;
+}
+
+/* Липкий контейнер */
+.sticky {
+  position: sticky;
+  top: 0;
+  height: calc(100 * var(--safe-vh));
+  overflow: clip;
+}
+
+/* Фон с параллаксом */
+.bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(var(--image-base-scale));
+  transform-origin: center;
+  will-change: transform;
+  filter: saturate(1.02);
+}
+
+/* Затемняющий слой поверх изображения */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0; /* будет меняться из JS 0 → var(--scrim-max) */
+  will-change: opacity;
+  pointer-events: none;
+}
+
+/* Текст */
+.copy {
+  --copy-shift: 0px;
+  position: absolute;
+  left: clamp(16px, 6vw, 96px);
+  top: 50%;
+  transform: translate3d(0, calc(-50% + var(--copy-shift, 0px)), 0);
+  max-width: min(62ch, 92vw);
+  will-change: transform;
+  text-shadow: 0 1px 12px rgba(0,0,0,.35);
+  opacity: 1;
+}
+h1, h2 { margin: 0 0 .25em 0; letter-spacing: .02em; }
+h1 { font-size: clamp(28px, 6.5vw, 72px); line-height: .98; }
+h2 { font-size: clamp(22px, 4.5vw, 48px); line-height: 1.05; }
+p  { margin: 0; font-size: clamp(14px, 1.6vw, 20px); opacity: .95; }
+
+@media (pointer: coarse) {
+  .copy { left: clamp(16px, 8vw, 120px); }
+}
+
+/* Уважение к prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .bg, .copy, .scrim {
+    transition: none !important;
+    will-change: auto;
+  }
+  .bg { transform: none !important; }
+  .copy { opacity: 1 !important; }
+  .panel--intro .copy { transform: translate3d(0, -50%, 0) !important; }
+}
