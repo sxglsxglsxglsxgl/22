@@ -31,14 +31,14 @@ let SCRIM_MAX;
 let IMAGE_SHIFT_FACTOR;
 let IMAGE_BASE_SCALE;
 let IMAGE_SCALE_RANGE;
-let TEXT_START_FACTOR;
+let TEXT_RANGE_FACTOR;
 function readMotionVars() {
   const styles = getComputedStyle(document.documentElement);
   SCRIM_MAX = parseFloat(styles.getPropertyValue('--scrim-max')) || 0.5;
   IMAGE_SHIFT_FACTOR = parseFloat(styles.getPropertyValue('--image-shift-factor')) || 0.12;
   IMAGE_BASE_SCALE = parseFloat(styles.getPropertyValue('--image-base-scale')) || 1.14;
   IMAGE_SCALE_RANGE = parseFloat(styles.getPropertyValue('--image-scale-range')) || 0.03;
-  TEXT_START_FACTOR = parseFloat(styles.getPropertyValue('--text-start-factor')) || 0.7;
+  TEXT_RANGE_FACTOR = parseFloat(styles.getPropertyValue('--text-range-factor')) || 1.3;
 }
 readMotionVars();
 
@@ -81,7 +81,7 @@ function tick() {
     if (reduceMotion) {
       scrims[i].style.opacity = Math.min(SCRIM_MAX, 0.3).toFixed(2);
       images[i].style.transform = 'none';
-      copies[i].style.transform = 'translateY(0)';
+      copies[i].style.transform = 'translate3d(0, -50%, 0)';
       copies[i].style.opacity = 1;
       return;
     }
@@ -94,9 +94,10 @@ function tick() {
     const scrimOpacity = SCRIM_MAX * progress;
     scrims[i].style.opacity = scrimOpacity.toFixed(3);
 
-    const textStart = viewH * TEXT_START_FACTOR;
-    const copyOffset = textStart * (1 - progress) + parallax;
-    copies[i].style.transform = `translateY(${copyOffset}px)`;
+    const textRange = viewH * TEXT_RANGE_FACTOR;
+    const parallaxCenter = parallax + imageTravel * 0.5;
+    const copyOffset = textRange * (0.5 - progress) + parallaxCenter;
+    copies[i].style.transform = `translate3d(0, ${copyOffset}px, 0)`;
     copies[i].style.opacity = 1;
   });
 

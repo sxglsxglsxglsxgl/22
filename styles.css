@@ -12,11 +12,11 @@ body {
   --vh: 1vh;
   --safe-vh: var(--vh);
   /* Настройки эффектов (подкручиваются при необходимости) */
-  --scrim-max: 0.5;            /* максимальное затемнение фото */
-  --image-shift-factor: 0.12;  /* доля высоты окна для параллакса */
-  --image-base-scale: 1.14;    /* базовый зум, чтобы не было пустот */
-  --image-scale-range: 0.03;   /* дополнительный зум при прокрутке */
-  --text-start-factor: 0.7;    /* доля высоты окна, с которой текст «подъезжает» */
+  --scrim-max: 0.45;            /* максимальное затемнение фото */
+  --image-shift-factor: 0.1;    /* доля высоты окна для параллакса */
+  --image-base-scale: 1.18;     /* базовый зум, чтобы не было пустот */
+  --image-scale-range: 0.045;   /* дополнительный зум при прокрутке */
+  --text-range-factor: 1.3;     /* диапазон движения текста относительно центра */
 }
 @supports (height: 100svh) { :root { --safe-vh: 1svh; } }
 @supports (height: 100dvh) { :root { --safe-vh: 1dvh; } }
@@ -66,12 +66,12 @@ body {
 .copy {
   position: absolute;
   left: clamp(16px, 6vw, 96px);
-  bottom: clamp(24px, 12vh, 200px);
+  top: 50%;
+  transform: translate3d(0, calc(-50% + 70 * var(--safe-vh)), 0);
   max-width: min(62ch, 92vw);
   will-change: transform;
   text-shadow: 0 1px 12px rgba(0,0,0,.35);
   opacity: 1;
-  transform: translateY(calc(70 * var(--safe-vh)));
 }
 h1, h2 { margin: 0 0 .25em 0; letter-spacing: .02em; }
 h1 { font-size: clamp(28px, 6.5vw, 72px); line-height: .98; }
@@ -79,7 +79,7 @@ h2 { font-size: clamp(22px, 4.5vw, 48px); line-height: 1.05; }
 p  { margin: 0; font-size: clamp(14px, 1.6vw, 20px); opacity: .95; }
 
 @media (pointer: coarse) {
-  .copy { bottom: clamp(24px, 8vh, 160px); }
+  .copy { left: clamp(16px, 8vw, 120px); }
 }
 
 /* Уважение к prefers-reduced-motion */
@@ -88,5 +88,6 @@ p  { margin: 0; font-size: clamp(14px, 1.6vw, 20px); opacity: .95; }
     transition: none !important;
     will-change: auto;
   }
-  .bg, .copy { transform: none !important; }
+  .bg { transform: none !important; }
+  .copy { transform: translate3d(0, -50%, 0) !important; }
 }
