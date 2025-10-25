@@ -3,14 +3,17 @@
 html, body { height: 100%; margin: 0; padding: 0; }
 body { background: #000; color: #fff; font: 400 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
 
-/* безопасные vh */
+/* безопасные vh и настройки анимаций */
 :root{
   --vh: 1vh;
   --safe-vh: var(--vh);
-  /* Настройки интенсивности (легко подкручиваются) */
-  --scrim-max: 0.55;   /* макс. затемнение картинки */
-  --text-move-up: 120; /* насколько сильно текст уезжает вверх (px) */
-  --text-start: 80;    /* стартовый сдвиг текста снизу (px) */
+  /* Настройки эффектов (легко правятся из CSS) */
+  --scrim-max: 0.55;           /* максимальное затемнение фото */
+  --image-shift-factor: 0.18;  /* сила параллакса фото относительно высоты окна */
+  --image-base-scale: 1.08;    /* базовый зум картинки, чтобы без пустот */
+  --image-scale-range: 0.04;   /* дополнительный зум в середине анимации */
+  --text-enter-factor: 0.65;   /* как далеко снизу стартует текст (доля высоты окна) */
+  --text-exit-factor: 0.55;    /* насколько высоко уезжает текст (доля высоты окна) */
 }
 @supports (height: 100svh) { :root { --safe-vh: 1svh; } }
 @supports (height: 100dvh) { :root { --safe-vh: 1dvh; } }
@@ -32,16 +35,16 @@ body { background: #000; color: #fff; font: 400 16px/1.5 system-ui, -apple-syste
   overflow: clip;
 }
 
-/* Фон — СТАТИЧЕСКИЙ (без масштабирования и параллакса) */
+/* Фон с параллаксом */
 .bg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: none;               /* <— принципиально */
-  will-change: opacity;          /* слегка помогаем, если фильтры/прозрачности */
-  filter: none;
+  transform: scale(var(--image-base-scale));
+  will-change: transform;
+  filter: saturate(1.02);
 }
 
 /* Затемняющий слой поверх изображения */
@@ -60,8 +63,9 @@ body { background: #000; color: #fff; font: 400 16px/1.5 system-ui, -apple-syste
   left: clamp(16px, 6vw, 96px);
   bottom: clamp(24px, 12vh, 200px);
   max-width: min(62ch, 92vw);
-  will-change: transform, opacity;
+  will-change: transform;
   text-shadow: 0 1px 12px rgba(0,0,0,.35);
+  opacity: 1;
 }
 h1, h2 { margin: 0 0 .25em 0; letter-spacing: .02em; }
 h1 { font-size: clamp(28px, 6.5vw, 72px); line-height: .98; }
@@ -74,5 +78,9 @@ p  { margin: 0; font-size: clamp(14px, 1.6vw, 20px); opacity: .95; }
 
 /* Уважение к prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
-  .bg, .copy, .scrim { transition: none !important; will-change: auto; }
+  .bg, .copy, .scrim {
+    transition: none !important;
+    will-change: auto;
+  }
+  .bg, .copy { transform: none !important; }
 }

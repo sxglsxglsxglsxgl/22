@@ -25,30 +25,52 @@ function measure() {
   });
 }
 measure();
-window.addEventListener('resize', () => { measure(); tick(); }, { passive: true });
 
 // настройки из CSS custom properties
-function cssVarPx(name, fallback = 0) {
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  const n = parseFloat(v);
-  return Number.isFinite(n) ? n : fallback;
+let SCRIM_MAX;
+let IMAGE_SHIFT_FACTOR;
+let IMAGE_BASE_SCALE;
+let IMAGE_SCALE_RANGE;
+let TEXT_ENTER_FACTOR;
+let TEXT_EXIT_FACTOR;
+function readMotionVars() {
+  const styles = getComputedStyle(document.documentElement);
+  SCRIM_MAX = parseFloat(styles.getPropertyValue('--scrim-max')) || 0.55;
+  IMAGE_SHIFT_FACTOR = parseFloat(styles.getPropertyValue('--image-shift-factor')) || 0.18;
+  IMAGE_BASE_SCALE = parseFloat(styles.getPropertyValue('--image-base-scale')) || 1.08;
+  IMAGE_SCALE_RANGE = parseFloat(styles.getPropertyValue('--image-scale-range')) || 0.04;
+  TEXT_ENTER_FACTOR = parseFloat(styles.getPropertyValue('--text-enter-factor')) || 0.65;
+  TEXT_EXIT_FACTOR = parseFloat(styles.getPropertyValue('--text-exit-factor')) || 0.55;
 }
-let TEXT_MOVE_UP = cssVarPx('--text-move-up', 120);
-let TEXT_START   = cssVarPx('--text-start', 80);
-let SCRIM_MAX    = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--scrim-max')) || 0.55;
+readMotionVars();
 
-// если меняли переменные динамически — можно перевычислить при ресайзе
-window.addEventListener('resize', () => {
-  TEXT_MOVE_UP = cssVarPx('--text-move-up', 120);
-  TEXT_START   = cssVarPx('--text-start', 80);
-  SCRIM_MAX    = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--scrim-max')) || 0.55;
-}, { passive: true });
+function onResize() {
+  measure();
+  readMotionVars();
+  tick();
+}
+window.addEventListener('resize', onResize, { passive: true });
 
-const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+let reduceMotion = reduceMotionQuery.matches;
+const updateReduceMotion = event => {
+  reduceMotion = event.matches;
+  tick();
+};
+if (typeof reduceMotionQuery.addEventListener === 'function') {
+  reduceMotionQuery.addEventListener('change', updateReduceMotion);
+} else if (typeof reduceMotionQuery.addListener === 'function') {
+  reduceMotionQuery.addListener(updateReduceMotion);
+}
 
 // скролл
 let ticking = false;
-function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(tick); } }
+function onScroll() {
+  if (!ticking) {
+    ticking = true;
+    requestAnimationFrame(tick);
+  }
+}
 window.addEventListener('scroll', onScroll, { passive: true });
 
 function tick() {
@@ -58,26 +80,29 @@ function tick() {
   rects.forEach(({ top, height }, i) => {
     const progress = clamp((y - top) / (height - viewH)); // 0 → 1 внутри панели
 
-    // 1) Фон — статичен
-    images[i].style.transform = 'none';
+    if (reduceMotion) {
+      scrims[i].style.opacity = Math.min(SCRIM_MAX, 0.35).toFixed(2);
+      images[i].style.transform = 'none';
+      copies[i].style.transform = 'translateY(0)';
+      copies[i].style.opacity = 1;
+      return;
+    }
 
-    // 2) Затемнение (scrim) — нарастает
+    const imageTravel = viewH * IMAGE_SHIFT_FACTOR;
+    const parallax = (0.5 - progress) * imageTravel * 2;
+    const centerWeight = 1 - Math.abs(0.5 - progress) * 2;
+    const scale = IMAGE_BASE_SCALE + IMAGE_SCALE_RANGE * Math.max(0, centerWeight);
+    images[i].style.transform = `translateY(${parallax}px) scale(${scale})`;
+
     const scrimOpacity = SCRIM_MAX * progress;
     scrims[i].style.opacity = scrimOpacity.toFixed(3);
 
-    // 3) Текст движется СИЛЬНЕЕ и проявляется быстрее
-    //    Старт: +TEXT_START px снизу; Финал: уходит вверх на TEXT_MOVE_UP * 0.33
-    const ty = TEXT_START - progress * (TEXT_START + TEXT_MOVE_UP * 0.33);
-    const op = clamp(progress * 1.25, 0, 1); // чуть быстрее проявление
-    copies[i].style.transform = `translateY(${ty}px)`;
-    copies[i].style.opacity = op.toFixed(3);
-
-    if (reduceMotion) {
-      // при снижении движения — фиксируем более мягкое затемнение, движение минимальное
-      scrims[i].style.opacity = Math.min(SCRIM_MAX, 0.35).toFixed(2);
-      copies[i].style.transform = 'translateY(0)';
-      copies[i].style.opacity = 1;
-    }
+    const start = viewH * TEXT_ENTER_FACTOR;
+    const end = -viewH * TEXT_EXIT_FACTOR;
+    const textTravel = start + (end - start) * progress;
+    const copyOffset = textTravel + parallax * 0.25; // текст следует за фото, сохраняя параллакс
+    copies[i].style.transform = `translateY(${copyOffset}px)`;
+    copies[i].style.opacity = 1;
   });
 
   ticking = false;
