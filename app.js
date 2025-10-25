@@ -31,16 +31,14 @@ let SCRIM_MAX;
 let IMAGE_SHIFT_FACTOR;
 let IMAGE_BASE_SCALE;
 let IMAGE_SCALE_RANGE;
-let TEXT_ENTER_FACTOR;
-let TEXT_EXIT_FACTOR;
+let TEXT_START_FACTOR;
 function readMotionVars() {
   const styles = getComputedStyle(document.documentElement);
-  SCRIM_MAX = parseFloat(styles.getPropertyValue('--scrim-max')) || 0.55;
-  IMAGE_SHIFT_FACTOR = parseFloat(styles.getPropertyValue('--image-shift-factor')) || 0.18;
-  IMAGE_BASE_SCALE = parseFloat(styles.getPropertyValue('--image-base-scale')) || 1.08;
-  IMAGE_SCALE_RANGE = parseFloat(styles.getPropertyValue('--image-scale-range')) || 0.04;
-  TEXT_ENTER_FACTOR = parseFloat(styles.getPropertyValue('--text-enter-factor')) || 0.65;
-  TEXT_EXIT_FACTOR = parseFloat(styles.getPropertyValue('--text-exit-factor')) || 0.55;
+  SCRIM_MAX = parseFloat(styles.getPropertyValue('--scrim-max')) || 0.5;
+  IMAGE_SHIFT_FACTOR = parseFloat(styles.getPropertyValue('--image-shift-factor')) || 0.12;
+  IMAGE_BASE_SCALE = parseFloat(styles.getPropertyValue('--image-base-scale')) || 1.14;
+  IMAGE_SCALE_RANGE = parseFloat(styles.getPropertyValue('--image-scale-range')) || 0.03;
+  TEXT_START_FACTOR = parseFloat(styles.getPropertyValue('--text-start-factor')) || 0.7;
 }
 readMotionVars();
 
@@ -81,7 +79,7 @@ function tick() {
     const progress = clamp((y - top) / (height - viewH)); // 0 → 1 внутри панели
 
     if (reduceMotion) {
-      scrims[i].style.opacity = Math.min(SCRIM_MAX, 0.35).toFixed(2);
+      scrims[i].style.opacity = Math.min(SCRIM_MAX, 0.3).toFixed(2);
       images[i].style.transform = 'none';
       copies[i].style.transform = 'translateY(0)';
       copies[i].style.opacity = 1;
@@ -89,18 +87,15 @@ function tick() {
     }
 
     const imageTravel = viewH * IMAGE_SHIFT_FACTOR;
-    const parallax = (0.5 - progress) * imageTravel * 2;
-    const centerWeight = 1 - Math.abs(0.5 - progress) * 2;
-    const scale = IMAGE_BASE_SCALE + IMAGE_SCALE_RANGE * Math.max(0, centerWeight);
+    const parallax = -imageTravel * progress;
+    const scale = IMAGE_BASE_SCALE + IMAGE_SCALE_RANGE * progress;
     images[i].style.transform = `translateY(${parallax}px) scale(${scale})`;
 
     const scrimOpacity = SCRIM_MAX * progress;
     scrims[i].style.opacity = scrimOpacity.toFixed(3);
 
-    const start = viewH * TEXT_ENTER_FACTOR;
-    const end = -viewH * TEXT_EXIT_FACTOR;
-    const textTravel = start + (end - start) * progress;
-    const copyOffset = textTravel + parallax * 0.25; // текст следует за фото, сохраняя параллакс
+    const textStart = viewH * TEXT_START_FACTOR;
+    const copyOffset = textStart * (1 - progress) + parallax;
     copies[i].style.transform = `translateY(${copyOffset}px)`;
     copies[i].style.opacity = 1;
   });
@@ -110,4 +105,6 @@ function tick() {
 
 // первичный проход
 tick();
-document.addEventListener('visibilitychange', () => { if (!document.hidden) requestAnimationFrame(tick); });
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) requestAnimationFrame(tick);
+});
