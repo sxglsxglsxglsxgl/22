@@ -1,0 +1,69 @@
+/* Базовые сбросы и предотвращение «разрывов» */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+html, body { margin: 0; padding: 0; }
+body { background: #000; color: #fff; font: 400 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+/* Безопасные viewport-юниты (iOS 15+/16+) */
+:root {
+  --vh: 1vh;              /* JS обновит на фактический */
+  --safe-vh: var(--vh);
+}
+@supports (height: 100svh) {
+  :root { --safe-vh: 1svh; }
+}
+@supports (height: 100dvh) {
+  :root { --safe-vh: 1dvh; }
+}
+.stack { width: 100%; }
+
+/* Каждая панель даёт «длину» прокрутки */
+.panel {
+  height: calc(200 * var(--safe-vh)); /* ~200vh */
+  margin: 0;
+  position: relative;
+}
+
+/* Липкий слой — ровно на 100vh экрана */
+.sticky {
+  position: sticky;
+  top: 0;
+  height: calc(100 * var(--safe-vh));
+  overflow: clip; /* избегаем прокидов */
+}
+
+/* Фоновые изображения */
+.bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.08); /* лёгкий зум для параллакса без пустот по краям */
+  will-change: transform;
+  filter: saturate(1.02);
+}
+
+/* Текстовый блок */
+.copy {
+  position: absolute;
+  left: clamp(16px, 6vw, 96px);
+  bottom: clamp(24px, 12vh, 200px);
+  max-width: min(62ch, 92vw);
+  will-change: transform, opacity;
+  text-shadow: 0 1px 12px rgba(0,0,0,.35);
+}
+h1, h2 { margin: 0 0 .25em 0; letter-spacing: .02em; }
+h1 { font-size: clamp(28px, 6.5vw, 72px); line-height: .98; }
+h2 { font-size: clamp(22px, 4.5vw, 48px); line-height: 1.05; }
+p  { margin: 0; font-size: clamp(14px, 1.6vw, 20px); opacity: .9; }
+
+/* Плавность шрифтов и тач */
+@media (pointer: coarse) {
+  .copy { bottom: clamp(24px, 8vh, 160px); }
+}
+
+/* Уважение к предпочитающим меньше движения */
+@media (prefers-reduced-motion: reduce) {
+  .bg, .copy { transition: none !important; will-change: auto; }
+}
