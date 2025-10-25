@@ -12,10 +12,11 @@ body {
   --vh: 1vh;
   --safe-vh: var(--vh);
   /* Настройки эффектов (подкручиваются при необходимости) */
-  --scrim-max: 0.45;            /* максимальное затемнение фото */
-  --image-shift-factor: 0.085;  /* доля высоты окна для параллакса */
-  --image-base-scale: 1.22;     /* базовый зум, чтобы не было пустот */
-  --image-scale-range: 0.05;    /* дополнительный зум при прокрутке */
+  --scrim-max: 0.45;             /* максимальное затемнение фото */
+  --image-shift-factor: 0.085;   /* доля высоты окна для параллакса */
+  --image-base-scale: 1.28;      /* базовый зум, чтобы не было пустот */
+  --image-scale-range: 0.06;     /* дополнительный зум при прокрутке */
+  --copy-extra-factor: 0.46;     /* доля высоты окна для траектории текста */
 }
 @supports (height: 100svh) { :root { --safe-vh: 1svh; } }
 @supports (height: 100dvh) { :root { --safe-vh: 1dvh; } }
@@ -89,5 +90,6 @@ p  { margin: 0; font-size: clamp(14px, 1.6vw, 20px); opacity: .95; }
     will-change: auto;
   }
   .bg { transform: none !important; }
-  .copy { transform: translate3d(0, -50%, 0) !important; }
+  .copy { opacity: 1 !important; }
+  .panel--intro .copy { transform: translate3d(0, -50%, 0) !important; }
 }
