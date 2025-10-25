@@ -13,10 +13,9 @@ body {
   --safe-vh: var(--vh);
   /* Настройки эффектов (подкручиваются при необходимости) */
   --scrim-max: 0.45;            /* максимальное затемнение фото */
-  --image-shift-factor: 0.1;    /* доля высоты окна для параллакса */
-  --image-base-scale: 1.18;     /* базовый зум, чтобы не было пустот */
-  --image-scale-range: 0.045;   /* дополнительный зум при прокрутке */
-  --text-range-factor: 1.3;     /* диапазон движения текста относительно центра */
+  --image-shift-factor: 0.085;  /* доля высоты окна для параллакса */
+  --image-base-scale: 1.22;     /* базовый зум, чтобы не было пустот */
+  --image-scale-range: 0.05;    /* дополнительный зум при прокрутке */
 }
 @supports (height: 100svh) { :root { --safe-vh: 1svh; } }
 @supports (height: 100dvh) { :root { --safe-vh: 1dvh; } }
@@ -64,10 +63,11 @@ body {
 
 /* Текст */
 .copy {
+  --copy-shift: 0px;
   position: absolute;
   left: clamp(16px, 6vw, 96px);
   top: 50%;
-  transform: translate3d(0, calc(-50% + 70 * var(--safe-vh)), 0);
+  transform: translate3d(0, calc(-50% + var(--copy-shift, 0px)), 0);
   max-width: min(62ch, 92vw);
   will-change: transform;
   text-shadow: 0 1px 12px rgba(0,0,0,.35);
